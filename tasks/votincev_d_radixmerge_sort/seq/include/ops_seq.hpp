@@ -18,5 +18,4 @@ class VotincevDRadixMergeSortSEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 };
-
 }  // namespace votincev_d_radixmerge_sort
