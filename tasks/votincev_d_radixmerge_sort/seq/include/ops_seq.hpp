@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <vector>
+
 #include "task/include/task.hpp"
 #include "votincev_d_radixmerge_sort/common/include/common.hpp"
 

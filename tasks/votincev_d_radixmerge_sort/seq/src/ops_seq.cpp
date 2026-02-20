@@ -55,8 +55,8 @@ bool VotincevDRadixMergeSortSEQ::RunImpl() {
   // локальная копия данных для сортировки
   std::vector<int32_t> working_array = GetInput();
 
-  // обработка отрицательных чисел с использованием алгоритмов STL
-  int32_t min_val = *std::min_element(working_array.begin(), working_array.end());
+  // обработка отрицательных чисел
+  int32_t min_val = *std::ranges::min_element(working_array);
 
   if (min_val < 0) {
     for (auto &num : working_array) {
@@ -65,7 +65,7 @@ bool VotincevDRadixMergeSortSEQ::RunImpl() {
   }
 
   // ищем максимальное число для определения количества разрядов
-  int32_t max_val = *std::max_element(working_array.begin(), working_array.end());
+  int32_t max_val = *std::ranges::max_element(working_array);
 
   // цикл по разрядам (единицы, десятки, сотни...)
   for (int32_t exp = 1; max_val / exp > 0; exp *= 10) {
