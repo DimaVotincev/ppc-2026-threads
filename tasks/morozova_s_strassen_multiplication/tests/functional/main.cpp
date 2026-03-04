@@ -27,17 +27,13 @@ class MorozovaSStrassenMultiplicationFuncTests : public ppc::util::BaseRunFuncTe
   }
 
   bool CheckTestOutputData(OutType &output_data) override {
-    if (test_number_ == 6 || test_number_ == 7) {
-      return true;
+    if (test_number_ == 6) {
+      return output_data.empty();
+    }
+    if (test_number_ == 7) {
+      return output_data.empty();
     }
     return ValidateMultiplicationResult(output_data);
-  }
-
-  bool CheckValidationExpectedResult() {
-    if (test_number_ == 6 || test_number_ == 7) {
-      return false;
-    }
-    return true;
   }
 
   InType GetTestInputData() override {
