@@ -6,6 +6,7 @@
 
 #include "guseva_crs/common/include/common.hpp"
 #include "guseva_crs/seq/include/ops_seq.hpp"
+#include "guseva_crs/stl/include/ops_stl.hpp"
 #include "util/include/perf_test_util.hpp"
 
 namespace guseva_crs {
@@ -55,7 +56,8 @@ TEST_P(GusevaMatMulCRSPerfTest, G) {
 
 namespace {
 
-const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, GusevaCRSMatMulSeq>(PPC_SETTINGS_guseva_crs);
+const auto kAllPerfTasks =
+    ppc::util::MakeAllPerfTasks<InType, GusevaCRSMatMulSeq, GusevaCRSMatMulStl>(PPC_SETTINGS_guseva_crs);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
