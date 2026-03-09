@@ -1,10 +1,9 @@
 #include "votincev_d_radixmerge_sort/omp/include/ops_omp.hpp"
 
-#include <algorithm>
-#include <cstddef>
-// #include <uint32_t>
 #include <omp.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "votincev_d_radixmerge_sort/common/include/common.hpp"
@@ -47,29 +46,25 @@ bool VotincevDRadixMergeSortOMP::RunImpl() {
   }
 
   std::vector<int32_t> working_array = GetInput();
-  int32_t n = static_cast<int32_t>(working_array.size());
+  auto n = static_cast<int32_t>(working_array.size());
 
   int32_t min_val = working_array[0];
-#pragma omp parallel for reduction(min : min_val)
+#pragma omp parallel for reduction(min : min_val) default(none) shared(working_array, n)
   for (int32_t i = 0; i < n; ++i) {
-    if (working_array[i] < min_val) {
-      min_val = working_array[i];
-    }
+    min_val = std::min(min_val, working_array[i]);
   }
 
   if (min_val < 0) {
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(working_array, n, min_val)
     for (int32_t i = 0; i < n; ++i) {
       working_array[i] -= min_val;
     }
   }
 
   int32_t max_val = working_array[0];
-#pragma omp parallel for reduction(max : max_val)
+#pragma omp parallel for reduction(max : max_val) default(none) shared(working_array, n)
   for (int32_t i = 0; i < n; ++i) {
-    if (working_array[i] > max_val) {
-      max_val = working_array[i];
-    }
+    max_val = std::max(max_val, working_array[i]);
   }
 
   for (int32_t exp = 1; max_val / exp > 0; exp *= 10) {
@@ -77,7 +72,7 @@ bool VotincevDRadixMergeSortOMP::RunImpl() {
   }
 
   if (min_val < 0) {
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(working_array, n, min_val)
     for (int32_t i = 0; i < n; ++i) {
       working_array[i] += min_val;
     }
