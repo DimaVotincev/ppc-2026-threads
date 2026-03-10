@@ -37,8 +37,24 @@ bool AdvanceIndicesFromLevel(std::array<int, kMaxDim> &indices, const std::vecto
   return true;
 }
 
-// thread_local вектор – один на поток OpenMP
-thread_local std::vector<double> tls_point;
+// Глобальный менеджер для однократной инициализации и корректного завершения OpenMP
+struct OMPResourceManager {
+  OMPResourceManager() {
+#ifdef _OPENMP
+    // Принудительная инициализация OpenMP при запуске программы
+    omp_get_max_threads();
+#endif
+  }
+
+  ~OMPResourceManager() {
+#ifdef _OPENMP
+// Если доступен OpenMP 5.0, пытаемся корректно завершить работу
+#  if defined(_OPENMP) && _OPENMP >= 201811
+    omp_pause_resource_all(omp_pause_hard);
+#  endif
+#endif
+  }
+} omp_global_manager;
 
 }  // namespace
 
@@ -81,13 +97,6 @@ bool RedkinaAIntegralSimpsonOMP::PreProcessingImpl() {
 }
 
 bool RedkinaAIntegralSimpsonOMP::RunImpl() {
-  // Однократная инициализация OpenMP (вызывается при первом входе)
-  static bool omp_init = []() {
-    omp_get_max_threads();  // форсирует создание внутренних структур
-    return true;
-  }();
-  (void)omp_init;  // подавление предупреждения о неиспользуемой переменной
-
   size_t dim = a_.size();
 
   std::vector<double> h(dim);
@@ -115,7 +124,7 @@ bool RedkinaAIntegralSimpsonOMP::RunImpl() {
 
 #pragma omp parallel default(none) shared(a_ref, h_ref, n_ref, func_ref, dim_local, total_sum)
   {
-    // Один вектор на поток – автоматически уничтожится при выходе из области
+    // Каждый поток создаёт свой вектор для точки, будет автоматически уничтожен при выходе из параллельной области
     std::vector<double> point(dim_local);
 
 #pragma omp for reduction(+ : total_sum)
