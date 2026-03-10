@@ -62,7 +62,6 @@ bool RedkinaAIntegralSimpsonOMP::PreProcessingImpl() {
 bool RedkinaAIntegralSimpsonOMP::RunImpl() {
   const size_t dim = a_.size();
 
-  /* локальные копии (обязательно для MSVC OpenMP) */
   const auto a_l = a_;
   const auto b_l = b_;
   const auto n_l = n_;
@@ -87,26 +86,29 @@ bool RedkinaAIntegralSimpsonOMP::RunImpl() {
 
   double sum = 0.0;
 
-#pragma omp parallel for default(none) reduction(+ : sum) shared(total_points, dim, a_l, n_l, h_l, func_l)
-  for (long long linear_idx = 0; linear_idx < total_points; ++linear_idx) {
+#pragma omp parallel default(none) reduction(+ : sum) shared(total_points, dim, a_l, n_l, h_l, func_l)
+  {
     std::vector<int> indices(dim);
     std::vector<double> point(dim);
 
-    long long tmp = linear_idx;
-    double weight_prod = 1.0;
+#pragma omp for
+    for (long long linear_idx = 0; linear_idx < total_points; ++linear_idx) {
+      long long tmp = linear_idx;
+      double weight_prod = 1.0;
 
-    for (int d = static_cast<int>(dim) - 1; d >= 0; --d) {
-      int size_d = n_l[d] + 1;
-      indices[d] = static_cast<int>(tmp % size_d);
-      tmp /= size_d;
+      for (int d = static_cast<int>(dim) - 1; d >= 0; --d) {
+        int size_d = n_l[d] + 1;
+        indices[d] = static_cast<int>(tmp % size_d);
+        tmp /= size_d;
+      }
+
+      for (size_t d = 0; d < dim; ++d) {
+        point[d] = a_l[d] + indices[d] * h_l[d];
+        weight_prod *= GetCoeff(indices[d], n_l[d]);
+      }
+
+      sum += weight_prod * func_l(point);
     }
-
-    for (size_t d = 0; d < dim; ++d) {
-      point[d] = a_l[d] + indices[d] * h_l[d];
-      weight_prod *= GetCoeff(indices[d], n_l[d]);
-    }
-
-    sum += weight_prod * func_l(point);
   }
 
   double denominator = 1.0;
