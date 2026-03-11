@@ -77,15 +77,16 @@ const std::array<TestType, 10> kTestParam = {"test1", "test2", "test3", "test4",
                                              "test6", "test7", "test8", "test9", "test10"};
 
 const auto kTestTasksList = std::tuple_cat(
+    ppc::util::AddFuncTask<VotincevDRadixMergeSortSEQ, InType>(kTestParam, PPC_SETTINGS_votincev_d_radixmerge_sort),
     ppc::util::AddFuncTask<VotincevDRadixMergeSortOMP, InType>(kTestParam, PPC_SETTINGS_votincev_d_radixmerge_sort));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kAllPerfTasks = std::tuple_cat(
-    ppc::util::AddFuncTask<VotincevDRadixMergeSortSEQ, InType>(kTestParam, PPC_SETTINGS_votincev_d_radixmerge_sort),
-    ppc::util::AddFuncTask<VotincevDRadixMergeSortOMP, InType>(kTestParam, PPC_SETTINGS_votincev_d_radixmerge_sort));
+const auto kPerfTestName =
+    VotincevDRadixMergeSortRunFuncTestsThreads::PrintFuncTestName<VotincevDRadixMergeSortRunFuncTestsThreads>
 
-INSTANTIATE_TEST_SUITE_P(RadixSortTests, VotincevDRadixMergeSortRunFuncTestsThreads, kGtestValues, kPerfTestName);
+        INSTANTIATE_TEST_SUITE_P(RadixSortTests, VotincevDRadixMergeSortRunFuncTestsThreads, kGtestValues,
+                                 kPerfTestName);
 
 }  // namespace
 
