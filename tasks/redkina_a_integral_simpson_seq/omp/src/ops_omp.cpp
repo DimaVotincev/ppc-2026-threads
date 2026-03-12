@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "redkina_a_integral_simpson_seq/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace redkina_a_integral_simpson_seq {
 
@@ -51,7 +50,7 @@ bool RedkinaAIntegralSimpsonOMP::PreProcessingImpl() {
 bool RedkinaAIntegralSimpsonOMP::RunImpl() {
   size_t dim = a_.size();
 
-  // Локальные копии для передачи в параллельную область
+  // Локальные копии, чтобы безопасно использовать их в параллельной области
   const std::vector<double> a_local = a_;
   const std::vector<double> b_local = b_;
   const std::vector<int> n_local = n_;
@@ -75,10 +74,7 @@ bool RedkinaAIntegralSimpsonOMP::RunImpl() {
 
   double total_sum = 0.0;
 
-  // Параллельная область: все данные, кроме total_nodes, передаются как firstprivate
-  // (каждый поток получает собственную копию), что исключает возможные проблемы
-  // с разделяемым доступом к нетривиальным объектам.
-#pragma omp parallel default(none) firstprivate(h, strides, a_local, n_local, func_local, dim) shared(total_nodes) \
+#pragma omp parallel default(none) shared(total_nodes, h, strides, a_local, n_local, func_local, dim) \
     reduction(+ : total_sum)
   {
     std::vector<int> indices(dim);
@@ -87,18 +83,18 @@ bool RedkinaAIntegralSimpsonOMP::RunImpl() {
 #pragma omp for schedule(static)
     for (int idx = 0; idx < total_nodes; ++idx) {
       int remainder = idx;
-      for (size_t d = 0; d < dim; ++d) {
-        indices[d] = remainder / strides[d];
-        remainder %= strides[d];
+      for (size_t dim_idx = 0; dim_idx < dim; ++dim_idx) {
+        indices[dim_idx] = remainder / strides[dim_idx];
+        remainder %= strides[dim_idx];
       }
 
       double w_prod = 1.0;
-      for (size_t d = 0; d < dim; ++d) {
-        int i_idx = indices[d];
-        point[d] = a_local[d] + i_idx * h[d];
+      for (size_t dim_idx = 0; dim_idx < dim; ++dim_idx) {
+        int i_idx = indices[dim_idx];
+        point[dim_idx] = a_local[dim_idx] + (i_idx * h[dim_idx]);
 
         int w = 0;
-        if (i_idx == 0 || i_idx == n_local[d]) {
+        if (i_idx == 0 || i_idx == n_local[dim_idx]) {
           w = 1;
         } else if (i_idx % 2 == 1) {
           w = 4;
