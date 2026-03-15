@@ -14,7 +14,7 @@ class VasilievMShellSortBatcherMergeOMP : public BaseTask {
     return ppc::task::TypeOfTask::kOMP;
   }
   explicit VasilievMShellSortBatcherMergeOMP(const InType &in);
-  static std::vector<size_t> ChunkBoundaries(size_t vec_size, int chunks_);
+  static std::vector<size_t> ChunkBoundaries(size_t vec_size, int threads);
   static void ShellSort(std::vector<ValType> &vec, std::vector<size_t> &bounds);
   static void CycleMerge(std::vector<ValType> &vec, std::vector<ValType> &buffer, std::vector<size_t> &bounds,
                          size_t size);
