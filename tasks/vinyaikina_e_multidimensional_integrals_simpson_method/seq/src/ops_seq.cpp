@@ -14,8 +14,8 @@
 namespace vinyaikina_e_multidimensional_integrals_simpson_method {
 namespace {
 
-double Сount(double simpson_factor, std::vector<std::pair<double, double>> &limits, std::vector<double> &actual_step,
-             const std::function<double(const std::vector<double> &)> &function) {
+double Сount(double simpson_factor, const std::vector<std::pair<double, double>> &limits,
+             std::vector<double> &actual_step, const std::function<double(const std::vector<double> &)> &function) {
   std::stack<std::pair<std::vector<double>, double>> stack;
   stack.emplace(std::vector<double>(), 1.0);
 

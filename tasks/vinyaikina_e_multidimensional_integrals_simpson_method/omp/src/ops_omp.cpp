@@ -71,7 +71,7 @@ double Сount(double left_border, double right_border, double simpson_factor,
       for (int i = 0; i <= steps_count; ++i) {
         double x = limits[dim].first + (i * step);
 
-        double weight = Weight(i, steps_count);
+        double dim_weight = Weight(i, steps_count);
 
         point.push_back(x);
         stack.emplace(point, weight * dim_weight);
