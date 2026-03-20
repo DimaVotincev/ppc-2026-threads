@@ -110,7 +110,7 @@ bool LiulinYComplexCcsOmp::RunImpl() {
 
   mat_res.col_index[0] = 0;
   for (int col_idx = 0; col_idx < cols_b_count; ++col_idx) {
-    const size_t u_col_idx = static_cast<size_t>(col_idx);
+    const auto u_col_idx = static_cast<size_t>(col_idx);
     mat_res.values.insert(mat_res.values.end(), thread_values[u_col_idx].begin(), thread_values[u_col_idx].end());
     mat_res.row_index.insert(mat_res.row_index.end(), thread_row_indices[u_col_idx].begin(),
                              thread_row_indices[u_col_idx].end());
