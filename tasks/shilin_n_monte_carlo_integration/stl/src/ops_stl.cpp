@@ -2,10 +2,7 @@
 
 #include <cmath>
 #include <cstddef>
-#include <execution>
-#include <functional>
-#include <numeric>
-#include <ranges>
+#include <thread>
 #include <vector>
 
 #include "shilin_n_monte_carlo_integration/common/include/common.hpp"
@@ -63,18 +60,37 @@ bool ShilinNMonteCarloIntegrationSTL::RunImpl() {
       0.38516480713450403   // frac(sqrt(29))
   };
 
-  auto sample_indices = std::views::iota(0, num_points_);
-  double sum = std::transform_reduce(std::execution::par, sample_indices.begin(), sample_indices.end(), 0.0,
-                                     std::plus<>(), [this, &alpha, dimensions](int i) {
-    thread_local std::vector<double> point;
-    point.resize(static_cast<size_t>(dimensions));
-    for (int di = 0; di < dimensions; ++di) {
-      double val = 0.5 + (static_cast<double>(i + 1) * alpha[di]);
-      double current = val - std::floor(val);
-      point[di] = lower_bounds_[di] + ((upper_bounds_[di] - lower_bounds_[di]) * current);
+  unsigned int num_threads = std::thread::hardware_concurrency();
+  if (num_threads == 0) {
+    num_threads = 2;
+  }
+
+  std::vector<double> partial_sums(num_threads, 0.0);
+  std::vector<std::thread> threads(num_threads);
+
+  auto worker = [&](unsigned int tid) {
+    std::vector<double> point(dimensions);
+    for (int i = static_cast<int>(tid); i < num_points_; i += static_cast<int>(num_threads)) {
+      for (int di = 0; di < dimensions; ++di) {
+        double val = 0.5 + (static_cast<double>(i + 1) * alpha[di]);
+        double current = val - std::floor(val);
+        point[di] = lower_bounds_[di] + ((upper_bounds_[di] - lower_bounds_[di]) * current);
+      }
+      partial_sums[tid] += IntegrandFunction::Evaluate(func_type_, point);
     }
-    return IntegrandFunction::Evaluate(func_type_, point);
-  });
+  };
+
+  for (unsigned int t = 0; t < num_threads; ++t) {
+    threads[t] = std::thread(worker, t);
+  }
+  for (auto &th : threads) {
+    th.join();
+  }
+
+  double sum = 0.0;
+  for (unsigned int t = 0; t < num_threads; ++t) {
+    sum += partial_sums[t];
+  }
 
   double volume = 1.0;
   for (int di = 0; di < dimensions; ++di) {
