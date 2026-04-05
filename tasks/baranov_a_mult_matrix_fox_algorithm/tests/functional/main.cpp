@@ -29,10 +29,11 @@ class BaranovAMatrixMultiplicationFuncTest
     size_t n = std::get<0>(test_param);
     std::string type = std::get<1>(test_param);
     std::string impl =
-        (std::is_same_v<TaskType, baranov_a_mult_matrix_fox_algorithm_omp::BaranovAMultMatrixFoxAlgorithmOMP>) ? "omp"
+        (std::is_same_v<TaskType, baranov_a_mult_matrix_fox_algorithm_omp::BaranovAMultMatrixFoxAlgorithmOMP>)   ? "omp"
         : (std::is_same_v<TaskType, baranov_a_mult_matrix_fox_algorithm_tbb::BaranovAMultMatrixFoxAlgorithmTBB>) ? "tbb"
-        : (std::is_same_v<TaskType, baranov_a_mult_matrix_fox_algorithm_stl::BaranovAMultMatrixFoxAlgorithmSTL>) ? "stl"
-                                                                                                               : "seq";
+        : (std::is_same_v<TaskType, baranov_a_mult_matrix_fox_algorithm_stl::BaranovAMultMatrixFoxAlgorithmSTL>)
+            ? "stl"
+            : "seq";
     return "n_" + std::to_string(n) + "_" + type + "_" + impl;
   }
 

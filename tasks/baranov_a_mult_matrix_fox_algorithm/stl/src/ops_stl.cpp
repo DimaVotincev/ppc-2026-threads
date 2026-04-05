@@ -3,36 +3,36 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <vector>
 #include <execution>
 #include <numeric>
+#include <vector>
 
 #include "baranov_a_mult_matrix_fox_algorithm/common/include/common.hpp"
 
 namespace baranov_a_mult_matrix_fox_algorithm_stl {
 
 BaranovAMultMatrixFoxAlgorithmSTL::BaranovAMultMatrixFoxAlgorithmSTL(
-    const baranov_a_mult_matrix_fox_algorithm::InType& in) {
+    const baranov_a_mult_matrix_fox_algorithm::InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = std::vector<double>();
 }
 
 bool BaranovAMultMatrixFoxAlgorithmSTL::ValidationImpl() {
-  const auto& [matrix_size, matrix_a, matrix_b] = GetInput();
+  const auto &[matrix_size, matrix_a, matrix_b] = GetInput();
   return matrix_size > 0 && matrix_a.size() == matrix_size * matrix_size &&
          matrix_b.size() == matrix_size * matrix_size;
 }
 
 bool BaranovAMultMatrixFoxAlgorithmSTL::PreProcessingImpl() {
-  const auto& [matrix_size, matrix_a, matrix_b] = GetInput();
+  const auto &[matrix_size, matrix_a, matrix_b] = GetInput();
   GetOutput() = std::vector<double>(matrix_size * matrix_size, 0.0);
   return true;
 }
 
 void BaranovAMultMatrixFoxAlgorithmSTL::StandardMultiplication(size_t n) {
-  const auto& [matrix_size, matrix_a, matrix_b] = GetInput();
-  auto& output = GetOutput();
+  const auto &[matrix_size, matrix_a, matrix_b] = GetInput();
+  auto &output = GetOutput();
 
   std::vector<size_t> indices(n);
   std::iota(indices.begin(), indices.end(), 0);
@@ -49,8 +49,8 @@ void BaranovAMultMatrixFoxAlgorithmSTL::StandardMultiplication(size_t n) {
 }
 
 void BaranovAMultMatrixFoxAlgorithmSTL::FoxBlockMultiplication(size_t n, size_t block_size) {
-  const auto& [matrix_size, matrix_a, matrix_b] = GetInput();
-  auto& output = GetOutput();
+  const auto &[matrix_size, matrix_a, matrix_b] = GetInput();
+  auto &output = GetOutput();
 
   size_t num_blocks = (n + block_size - 1) / block_size;
   std::fill(std::execution::par, output.begin(), output.end(), 0.0);
@@ -86,7 +86,7 @@ void BaranovAMultMatrixFoxAlgorithmSTL::FoxBlockMultiplication(size_t n, size_t 
 }
 
 bool BaranovAMultMatrixFoxAlgorithmSTL::RunImpl() {
-  const auto& [matrix_size, matrix_a, matrix_b] = GetInput();
+  const auto &[matrix_size, matrix_a, matrix_b] = GetInput();
   size_t n = matrix_size;
 
   size_t block_size = 64;

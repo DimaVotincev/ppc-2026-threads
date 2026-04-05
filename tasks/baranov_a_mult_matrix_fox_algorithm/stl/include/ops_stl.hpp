@@ -13,7 +13,7 @@ class BaranovAMultMatrixFoxAlgorithmSTL : public baranov_a_mult_matrix_fox_algor
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kSTL;
   }
-  explicit BaranovAMultMatrixFoxAlgorithmSTL(const baranov_a_mult_matrix_fox_algorithm::InType& in);
+  explicit BaranovAMultMatrixFoxAlgorithmSTL(const baranov_a_mult_matrix_fox_algorithm::InType &in);
 
  private:
   bool ValidationImpl() override;
