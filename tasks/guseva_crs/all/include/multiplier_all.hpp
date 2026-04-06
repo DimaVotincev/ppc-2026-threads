@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstring>
+#include <stdexcept>
 #include <vector>
 
 #include "guseva_crs/common/include/common.hpp"
@@ -122,7 +123,7 @@ class MultiplierAll : public Multiplier {
           columns[global_row][j] = data.flat_columns[offset + j];
           values[global_row][j] = data.flat_values[offset + j];
         }
-        offset += row_size;
+        offset += static_cast<std::size_t>(row_size);
       }
     }
   }
@@ -185,8 +186,8 @@ class MultiplierAll : public Multiplier {
       return MultiplySerial(a, b);
     }
 
-    std::size_t rows_per_proc = n / num_procs;
-    std::size_t remainder = n % num_procs;
+    std::size_t rows_per_proc = n / static_cast<std::size_t>(num_procs);
+    std::size_t remainder = n % static_cast<std::size_t>(num_procs);
     std::size_t start_row =
         (static_cast<std::size_t>(rank) * rows_per_proc) + std::min(static_cast<std::size_t>(rank), remainder);
     std::size_t local_nrows = rows_per_proc + (static_cast<std::size_t>(rank) < remainder ? 1 : 0);
