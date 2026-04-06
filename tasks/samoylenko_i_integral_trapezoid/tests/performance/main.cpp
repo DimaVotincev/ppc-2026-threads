@@ -5,6 +5,7 @@
 #include "samoylenko_i_integral_trapezoid/common/include/common.hpp"
 #include "samoylenko_i_integral_trapezoid/omp/include/ops_omp.hpp"
 #include "samoylenko_i_integral_trapezoid/seq/include/ops_seq.hpp"
+#include "samoylenko_i_integral_trapezoid/tbb/include/ops_tbb.hpp"
 #include "util/include/perf_test_util.hpp"
 
 namespace samoylenko_i_integral_trapezoid {
@@ -33,8 +34,8 @@ TEST_P(SamoylenkoIIntegralTrapezoidPerfTests, RunPerfModes) {
 namespace {
 
 const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, SamoylenkoIIntegralTrapezoidSEQ, SamoylenkoIIntegralTrapezoidOMP>(
-        PPC_SETTINGS_samoylenko_i_integral_trapezoid);
+    ppc::util::MakeAllPerfTasks<InType, SamoylenkoIIntegralTrapezoidSEQ, SamoylenkoIIntegralTrapezoidOMP,
+                                SamoylenkoIIntegralTrapezoidTBB>(PPC_SETTINGS_samoylenko_i_integral_trapezoid);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
