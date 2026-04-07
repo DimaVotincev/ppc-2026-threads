@@ -63,7 +63,8 @@ void ConvexHullTBB::BinarizeImage(uint8_t threshold) {
   const size_t size = working_image_.pixels.size();
   auto &pixels = working_image_.pixels;
 
-  tbb::parallel_for(size_t(0), size,
+  // Исправлено: используем static_cast вместо C-style cast
+  tbb::parallel_for(static_cast<size_t>(0), size,
                     [&pixels, threshold](size_t i) { pixels[i] = pixels[i] > threshold ? uint8_t{255} : uint8_t{0}; });
 }
 
