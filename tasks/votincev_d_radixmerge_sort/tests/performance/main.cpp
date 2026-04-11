@@ -23,7 +23,7 @@ class VotincevDRadixMergeSortRunPerfTestsThreads : public ppc::util::BaseRunPerf
 
   void SetUp() override {
     // Большой размер вектора для замера производительности
-    size_t vect_sz = 1000000;
+    size_t vect_sz = 3000000;
     input_data.assign(vect_sz, 0);
     for (size_t i = 0; i < vect_sz; i++) {
       // Генерация псевдослучайных чисел

@@ -10,84 +10,85 @@
 namespace votincev_d_radixmerge_sort {
 
 VotincevDRadixMergeSortSEQ::VotincevDRadixMergeSortSEQ(const InType &in) {
-  SetTypeOfTask(GetStaticTypeOfTask());
-  GetInput() = in;
+    SetTypeOfTask(GetStaticTypeOfTask());
+    GetInput() = in;
 }
 
-// проверка входных данных
 bool VotincevDRadixMergeSortSEQ::ValidationImpl() {
-  // проверка: входной вектор не должен быть пустым
-  return !GetInput().empty();
+    return !GetInput().empty();
 }
 
-// препроцессинг
 bool VotincevDRadixMergeSortSEQ::PreProcessingImpl() {
-  return true;
+    return true;
 }
 
-// вспомогательный метод для распределения и слияния разрядов
+// ОПТИМИЗИРОВАННЫЙ метод: используем Counting Sort вместо векторов в векторах
 void VotincevDRadixMergeSortSEQ::SortByDigit(std::vector<int32_t> &array, int32_t exp) {
-  std::vector<std::vector<int32_t>> buckets(10);
+    size_t n = array.size();
+    std::vector<int32_t> output(n); // Временный буфер для текущего разряда
+    int32_t count[10] = {0};        // Массив счетчиков для цифр 0-9
 
-  // распределение элементов по корзинам
-  for (const auto &num : array) {
-    int32_t digit = (num / exp) % 10;
-    buckets[digit].push_back(num);
-  }
-
-  // простое слияние корзин обратно в рабочий массив
-  size_t index = 0;
-  for (int i = 0; i < 10; ++i) {
-    for (const auto &val : buckets[i]) {
-      array[index++] = val;
+    // 1. Считаем количество вхождений каждой цифры (0-9)
+    for (size_t i = 0; i < n; i++) {
+        int32_t digit = (array[i] / exp) % 10;
+        count[digit]++;
     }
-    // очистка корзины для следующего разряда
-    buckets[i].clear();
-  }
+
+    // 2. Превращаем счетчики в индексы (префиксные суммы)
+    // Теперь count[i] содержит позицию, ПЕРЕД которой заканчиваются элементы с цифрой i
+    for (int i = 1; i < 10; i++) {
+        count[i] += count[i - 1];
+    }
+
+    // 3. Строим выходной массив, проходя с конца (ВАЖНО для стабильности сортировки)
+    for (int64_t i = n - 1; i >= 0; i--) {
+        int32_t digit = (array[i] / exp) % 10;
+        output[count[digit] - 1] = array[i];
+        count[digit]--;
+    }
+
+    // 4. Копируем результат обратно в основной массив
+    array = std::move(output);
 }
 
-// основной метод алгоритма
 bool VotincevDRadixMergeSortSEQ::RunImpl() {
-  if (GetInput().empty()) {
-    return false;
-  }
-
-  // локальная копия данных для сортировки
-  std::vector<int32_t> working_array = GetInput();
-
-  // обработка отрицательных чисел
-  int32_t min_val = *std::ranges::min_element(working_array);
-
-  if (min_val < 0) {
-    for (auto &num : working_array) {
-      num -= min_val;
+    if (GetInput().empty()) {
+        return false;
     }
-  }
 
-  // ищем максимальное число для определения количества разрядов
-  int32_t max_val = *std::ranges::max_element(working_array);
+    std::vector<int32_t> working_array = GetInput();
+    
+    // Поиск min и max за один проход
+    auto [min_it, max_it] = std::minmax_element(working_array.begin(), working_array.end());
+    int32_t min_val = *min_it;
+    int32_t max_val = *max_it;
 
-  // цикл по разрядам (единицы, десятки, сотни...)
-  for (int32_t exp = 1; max_val / exp > 0; exp *= 10) {
-    SortByDigit(working_array, exp);
-  }
-
-  // возвращаем значения к исходному диапазону
-  if (min_val < 0) {
-    for (auto &num : working_array) {
-      num += min_val;
+    // Сдвиг в положительную область
+    if (min_val < 0) {
+        for (auto &num : working_array) {
+            num -= min_val;
+        }
+        max_val -= min_val;
     }
-  }
 
-  // запись результата в выходные данные
-  GetOutput() = working_array;
+    // Цикл по разрядам. Используем int64_t для exp, чтобы избежать переполнения при exp * 10
+    for (int64_t exp = 1; max_val / exp > 0; exp *= 10) {
+        SortByDigit(working_array, static_cast<int32_t>(exp));
+    }
 
-  return true;
+    // Возврат к исходному диапазону
+    if (min_val < 0) {
+        for (auto &num : working_array) {
+            num += min_val;
+        }
+    }
+
+    GetOutput() = std::move(working_array);
+    return true;
 }
 
-// постпроцессинг
 bool VotincevDRadixMergeSortSEQ::PostProcessingImpl() {
-  return true;
+    return true;
 }
 
 }  // namespace votincev_d_radixmerge_sort
