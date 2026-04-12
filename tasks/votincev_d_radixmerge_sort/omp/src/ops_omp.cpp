@@ -21,11 +21,10 @@ bool VotincevDRadixMergeSortOMP::PreProcessingImpl() {
   return true;
 }
 
-// Внутренняя поразрядная сортировка для беззнаковых чисел
 void LocalRadixSort(uint32_t *begin, uint32_t *end) {
   int32_t n = static_cast<int32_t>(end - begin);
   if (n <= 1) {
-    return;  // Проверка в самом начале
+    return;  
   }
 
   uint32_t max_val = begin[0];
@@ -39,7 +38,7 @@ void LocalRadixSort(uint32_t *begin, uint32_t *end) {
   uint32_t *src = begin;
   uint32_t *dst = buffer.data();
 
-  // Используем int64_t для exp, чтобы избежать переполнения при exp * 10
+  //  int64_t для exp, чтобы избежать переполнения при exp * 10
   for (int64_t exp = 1; static_cast<int64_t>(max_val) / exp > 0; exp *= 10) {
     int32_t count[10] = {0};
 
@@ -81,7 +80,7 @@ bool VotincevDRadixMergeSortOMP::RunImpl() {
     return false;
   }
 
-  // Используем uint32_t для работы с полным диапазоном int32_t без переполнений
+  //  uint32_t для работы с полным диапазоном int32_t без переполнений
   std::vector<uint32_t> working_array(n);
   int32_t min_val = input[0];
 
@@ -104,7 +103,7 @@ bool VotincevDRadixMergeSortOMP::RunImpl() {
     int tid = omp_get_thread_num();
     int n_threads = omp_get_num_threads();
 
-    // Равномерное распределение нагрузки
+    // равномерное распределение нагрузки
     int32_t items = n / n_threads;
     int32_t rem = n % n_threads;
     int32_t l = tid * items + std::min(tid, rem);
@@ -114,7 +113,7 @@ bool VotincevDRadixMergeSortOMP::RunImpl() {
       LocalRadixSort(working_array.data() + l, working_array.data() + r);
     }
 
-    // Иерархическое слияние блоков
+    // слияние блоков
     for (int32_t step = 1; step < n_threads; step *= 2) {
 #pragma omp barrier
       if (tid % (2 * step) == 0 && tid + step < n_threads) {
