@@ -21,10 +21,10 @@ bool VotincevDRadixMergeSortOMP::PreProcessingImpl() {
   return true;
 }
 
-void LocalRadixSort(uint32_t *begin, uint32_t *end) {
+void VotincevDRadixMergeSortOMP::LocalRadixSort(uint32_t *begin, uint32_t *end) {
   int32_t n = static_cast<int32_t>(end - begin);
   if (n <= 1) {
-    return;  
+    return;
   }
 
   uint32_t max_val = begin[0];
@@ -60,7 +60,7 @@ void LocalRadixSort(uint32_t *begin, uint32_t *end) {
   }
 }
 
-void Merge(uint32_t *src, uint32_t *dst, int32_t left, int32_t mid, int32_t right) {
+void VotincevDRadixMergeSortOMP::Merge(uint32_t *src, uint32_t *dst, int32_t left, int32_t mid, int32_t right) {
   int32_t i = left, j = mid, k = left;
   while (i < mid && j < right) {
     dst[k++] = (src[i] <= src[j]) ? src[i++] : src[j++];

@@ -28,7 +28,6 @@ void VotincevDRadixMergeSortSEQ::SortByDigit(std::vector<int32_t> &array, int32_
   std::vector<int32_t> output(n);
   int32_t count[10] = {0};
 
-  
   for (size_t i = 0; i < n; i++) {
     int32_t digit = (array[i] / exp) % 10;
     count[digit]++;
@@ -52,7 +51,6 @@ void VotincevDRadixMergeSortSEQ::SortByDigit(std::vector<int32_t> &array, int32_
 }
 
 bool VotincevDRadixMergeSortSEQ::RunImpl() {
-
   std::vector<int32_t> working_array = GetInput();
 
   // поиск min и max за один проход
