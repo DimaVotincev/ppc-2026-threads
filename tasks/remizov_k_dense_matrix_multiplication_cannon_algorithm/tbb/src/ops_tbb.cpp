@@ -138,4 +138,24 @@ void RemizovKDenseMatrixMultiplicationCannonAlgorithmTbb::InitializeBlocks(
       });
 }
 
+void RemizovKDenseMatrixMultiplicationCannonAlgorithmTbb::AssembleOutput(
+    std::vector<std::vector<std::vector<std::vector<double>>>> &c_blocks,
+    std::vector<std::vector<double>> &output,
+    int block_size,
+    int block_count) {
+  tbb::parallel_for(
+      tbb::blocked_range2d<int>(0, block_count, 0, block_count),
+      [&](const tbb::blocked_range2d<int> &r) {
+        for (int i = r.rows().begin(); i != r.rows().end(); ++i) {
+          for (int j = r.cols().begin(); j != r.cols().end(); ++j) {
+            for (int bi = 0; bi < block_size; ++bi) {
+              for (int bj = 0; bj < block_size; ++bj) {
+                output[(i * block_size) + bi][(j * block_size) + bj] = c_blocks[i][j][bi][bj];
+              }
+            }
+          }
+        }
+      });
+}
+
 }  // namespace remizov_k_dense_matrix_multiplication_cannon_algorithm
