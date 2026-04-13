@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -41,14 +42,15 @@ void VotincevDRadixMergeSortOMP::LocalRadixSort(uint32_t *begin, uint32_t *end) 
     std::array<int32_t, 10> count{};
 
     for (int32_t i = 0; i < n; ++i) {
-      count[static_cast<size_t>((src[i] / exp) % 10)]++;
+      count.at(static_cast<size_t>((src[i] / exp) % 10))++;
     }
     for (int32_t i = 1; i < 10; ++i) {
-      count[static_cast<size_t>(i)] += count[static_cast<size_t>(i - 1)];
+      count.at(static_cast<size_t>(i)) += count.at(static_cast<size_t>(i - 1));
     }
     for (int32_t i = n - 1; i >= 0; --i) {
       uint32_t digit = (src[i] / exp) % 10;
-      dst[--count[static_cast<size_t>(digit)]] = src[i];
+      dst.at(count.at(static_cast<size_t>(digit))) = src[i];
+      count.at(static_cast<size_t>(digit))--;
     }
     std::swap(src, dst);
   }
@@ -58,7 +60,7 @@ void VotincevDRadixMergeSortOMP::LocalRadixSort(uint32_t *begin, uint32_t *end) 
   }
 }
 
-void VotincevDRadixMergeSortOMP::Merge(uint32_t *src, uint32_t *dst, int32_t left, int32_t mid, int32_t right) {
+void VotincevDRadixMergeSortOMP::Merge(const uint32_t *src, uint32_t *dst, int32_t left, int32_t mid, int32_t right) {
   int32_t i = left;
   int32_t j = mid;
   int32_t k = left;
@@ -110,7 +112,7 @@ bool VotincevDRadixMergeSortOMP::RunImpl() {
 #pragma omp barrier
       if ((tid % (2 * step) == 0) && (tid + step < n_threads)) {
         int32_t m = ((tid + step) * items) + std::min(tid + step, rem);
-        int32_t next_r = ((tid + 2 * step) * items) + std::min(tid + 2 * step, rem);
+        int32_t next_r = ((tid + (2 * step)) * items) + std::min(tid + (2 * step), rem);
         next_r = std::min(next_r, n);
 
         Merge(working_array.data(), temp_buffer.data(), l, m, next_r);
