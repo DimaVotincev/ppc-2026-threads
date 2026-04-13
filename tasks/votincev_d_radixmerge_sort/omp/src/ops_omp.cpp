@@ -49,7 +49,7 @@ void VotincevDRadixMergeSortOMP::LocalRadixSort(uint32_t *begin, uint32_t *end) 
     }
     for (int32_t i = n - 1; i >= 0; --i) {
       uint32_t digit = (src[i] / exp) % 10;
-      dst.at(count.at(static_cast<size_t>(digit))) = src[i];
+      dst[count.at(static_cast<size_t>(digit))] = src[i];
       count.at(static_cast<size_t>(digit))--;
     }
     std::swap(src, dst);
