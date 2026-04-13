@@ -26,34 +26,31 @@ bool VotincevDRadixMergeSortTBB::PreProcessingImpl() {
 }
 
 // поразрядная сортировка для локальных блоков
-void VotincevDRadixMergeSortTBB::LocalRadixSort(uint32_t *begin, uint32_t *end) {
+void VotincevDRadixMergeSortOMP::LocalRadixSort(uint32_t *begin, uint32_t *end) {
   auto n = static_cast<int32_t>(end - begin);
   if (n <= 1) {
     return;
   }
 
-  uint32_t max_val = begin[0];
-  for (int32_t i = 1; i < n; ++i) {
-    max_val = std::max(begin[static_cast<size_t>(i)], max_val);
-  }
+  uint32_t max_val = *std::max_element(begin, end);
 
   std::vector<uint32_t> buffer(static_cast<size_t>(n));
   uint32_t *src = begin;
   uint32_t *dst = buffer.data();
 
-  //  int64_t для exp, чтобы избежать переполнения при exp * 10
   for (int64_t exp = 1; (static_cast<int64_t>(max_val) / exp) > 0; exp *= 10) {
     std::array<int32_t, 10> count{};
 
     for (int32_t i = 0; i < n; ++i) {
-      count[static_cast<size_t>((src[static_cast<size_t>(i)] / exp) % 10)]++;
+      count.at(static_cast<size_t>((src[i] / exp) % 10))++;
     }
     for (int32_t i = 1; i < 10; ++i) {
-      count[static_cast<size_t>(i)] += count[static_cast<size_t>(i - 1)];
+      count.at(static_cast<size_t>(i)) += count.at(static_cast<size_t>(i - 1));
     }
     for (int32_t i = n - 1; i >= 0; --i) {
-      uint32_t digit = (src[static_cast<size_t>(i)] / exp) % 10;
-      dst[--count[static_cast<size_t>(digit)]] = src[static_cast<size_t>(i)];
+      uint32_t digit = (src[i] / exp) % 10;
+      dst.at(count.at(static_cast<size_t>(digit))) = src[i];
+      count.at(static_cast<size_t>(digit))--;
     }
     std::swap(src, dst);
   }
@@ -64,23 +61,19 @@ void VotincevDRadixMergeSortTBB::LocalRadixSort(uint32_t *begin, uint32_t *end) 
 }
 
 // слияние двух отсортированных участков
-void VotincevDRadixMergeSortTBB::Merge(uint32_t *data, int32_t left, int32_t mid, int32_t right, uint32_t *temp) {
+void VotincevDRadixMergeSortOMP::Merge(const uint32_t *src, uint32_t *dst, int32_t left, int32_t mid, int32_t right) {
   int32_t i = left;
   int32_t j = mid;
   int32_t k = left;
   while (i < mid && j < right) {
-    temp[static_cast<size_t>(k++)] = (data[static_cast<size_t>(i)] <= data[static_cast<size_t>(j)])
-                                         ? data[static_cast<size_t>(i++)]
-                                         : data[static_cast<size_t>(j++)];
+    dst[k++] = (src[i] <= src[j]) ? src[i++] : src[j++];
   }
   while (i < mid) {
-    temp[static_cast<size_t>(k++)] = data[static_cast<size_t>(i++)];
+    dst[k++] = src[i++];
   }
   while (j < right) {
-    temp[static_cast<size_t>(k++)] = data[static_cast<size_t>(j++)];
+    dst[k++] = src[j++];
   }
-
-  std::copy(temp + left, temp + right, data + left);
 }
 
 // параллельная сортировка слиянием(сортировка + слияние)
