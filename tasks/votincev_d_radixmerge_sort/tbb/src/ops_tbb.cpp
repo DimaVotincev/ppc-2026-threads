@@ -26,7 +26,7 @@ bool VotincevDRadixMergeSortTBB::PreProcessingImpl() {
 }
 
 // поразрядная сортировка для локальных блоков
-void VotincevDRadixMergeSortOMP::LocalRadixSort(uint32_t *begin, uint32_t *end) {
+void VotincevDRadixMergeSortTBB::LocalRadixSort(uint32_t *begin, uint32_t *end) {
   auto n = static_cast<int32_t>(end - begin);
   if (n <= 1) {
     return;
@@ -48,9 +48,12 @@ void VotincevDRadixMergeSortOMP::LocalRadixSort(uint32_t *begin, uint32_t *end) 
       count.at(static_cast<size_t>(i)) += count.at(static_cast<size_t>(i - 1));
     }
     for (int32_t i = n - 1; i >= 0; --i) {
-      uint32_t digit = (src[i] / exp) % 10;
-      dst.at(count.at(static_cast<size_t>(digit))) = src[i];
-      count.at(static_cast<size_t>(digit))--;
+      size_t digit = static_cast<size_t>((src[i] / exp) % 10);
+
+      size_t target_idx = static_cast<size_t>(count.at(digit)) - 1;
+      dst[target_idx] = src[i];
+
+      count.at(digit)--;
     }
     std::swap(src, dst);
   }
@@ -61,7 +64,7 @@ void VotincevDRadixMergeSortOMP::LocalRadixSort(uint32_t *begin, uint32_t *end) 
 }
 
 // слияние двух отсортированных участков
-void VotincevDRadixMergeSortOMP::Merge(const uint32_t *src, uint32_t *dst, int32_t left, int32_t mid, int32_t right) {
+void VotincevDRadixMergeSortTBB::Merge(const uint32_t *src, uint32_t *dst, int32_t left, int32_t mid, int32_t right) {
   int32_t i = left;
   int32_t j = mid;
   int32_t k = left;
@@ -92,7 +95,10 @@ void VotincevDRadixMergeSortTBB::ParallelRadixMergeSort(uint32_t *data, int32_t 
                        [&] { ParallelRadixMergeSort(data, mid, right, temp); });
 
   // слияние результатов
-  Merge(data, left, mid, right, temp);
+  Merge(data, temp, left, mid, right);
+
+  // копируем в основной массив
+  std::copy(temp + left, temp + right, data + left);
 }
 
 bool VotincevDRadixMergeSortTBB::RunImpl() {
