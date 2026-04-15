@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -48,7 +49,7 @@ void VotincevDRadixMergeSortTBB::LocalRadixSort(uint32_t *begin, uint32_t *end) 
       count.at(static_cast<size_t>(i)) += count.at(static_cast<size_t>(i - 1));
     }
     for (int32_t i = n - 1; i >= 0; --i) {
-      size_t digit = static_cast<size_t>((src[i] / exp) % 10);
+      auto digit = static_cast<size_t>((src[i] / exp) % 10);
 
       size_t target_idx = static_cast<size_t>(count.at(digit)) - 1;
       dst[target_idx] = src[i];

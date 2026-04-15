@@ -48,7 +48,7 @@ class VotincevDRadixMergeSortRunPerfTestsThreads : public ppc::util::BaseRunPerf
 namespace {
 const auto kAllPerfTasks =
     ppc::util::MakeAllPerfTasks<InType, VotincevDRadixMergeSortSEQ, VotincevDRadixMergeSortOMP,
-                                VotincevDRadixMergeSortOMP>(PPC_SETTINGS_votincev_d_radixmerge_sort);
+                                VotincevDRadixMergeSortTBB>(PPC_SETTINGS_votincev_d_radixmerge_sort);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 const auto kPerfTestName = VotincevDRadixMergeSortRunPerfTestsThreads::CustomPerfTestName;
