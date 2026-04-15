@@ -8,6 +8,8 @@
 #include "votincev_d_radixmerge_sort/common/include/common.hpp"
 #include "votincev_d_radixmerge_sort/omp/include/ops_omp.hpp"
 #include "votincev_d_radixmerge_sort/seq/include/ops_seq.hpp"
+#include "votincev_d_radixmerge_sort/stl/include/ops_stl.hpp"
+#include "votincev_d_radixmerge_sort/tbb/include/ops_tbb.hpp"
 
 namespace votincev_d_radixmerge_sort {
 
@@ -23,7 +25,7 @@ class VotincevDRadixMergeSortRunPerfTestsThreads : public ppc::util::BaseRunPerf
 
   void SetUp() override {
     // Большой размер вектора для замера производительности
-    size_t vect_sz = 1000000;
+    size_t vect_sz = 3000000;
     input_data.assign(vect_sz, 0);
     for (size_t i = 0; i < vect_sz; i++) {
       // Генерация псевдослучайных чисел
@@ -45,7 +47,8 @@ class VotincevDRadixMergeSortRunPerfTestsThreads : public ppc::util::BaseRunPerf
 };
 
 namespace {
-const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, VotincevDRadixMergeSortSEQ, VotincevDRadixMergeSortOMP>(
+const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, VotincevDRadixMergeSortSEQ, VotincevDRadixMergeSortOMP,
+                                                       VotincevDRadixMergeSortTBB, VotincevDRadixMergeSortSTL>(
     PPC_SETTINGS_votincev_d_radixmerge_sort);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
