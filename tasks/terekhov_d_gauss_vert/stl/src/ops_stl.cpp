@@ -10,7 +10,7 @@
 #include "util/include/util.hpp"
 
 namespace terekhov_d_gauss_vert {
-// 1232
+
 namespace {
 
 inline void ProcessPixel(OutType &output, const std::vector<int> &padded_image, int padded_width, int width, int row,
@@ -48,11 +48,11 @@ OutType SolveSTL(const std::vector<int> &padded_image, int width, int height) {
 
   const int padded_width = width + 2;
   const int num_threads = ppc::util::GetNumThreads();
-  const int band_width = std::max(width / num_threads, 1);
-  const int num_bands = num_threads;
+  const int num_bands = std::min(num_threads, width);  // Исправлено!
+  const int band_width = std::max(width / num_bands, 1);
 
   std::vector<std::thread> threads;
-  threads.reserve(static_cast<size_t>(num_threads));
+  threads.reserve(static_cast<size_t>(num_bands));
 
   for (int band = 0; band < num_bands; ++band) {
     threads.emplace_back([&output, &padded_image, padded_width, width, height, band, band_width, num_bands]() {
