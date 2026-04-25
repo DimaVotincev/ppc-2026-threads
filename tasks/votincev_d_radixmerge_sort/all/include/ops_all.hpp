@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "task/include/task.hpp"
@@ -13,7 +14,9 @@ class VotincevDRadixMergeSortALL : public BaseTask {
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kALL;
   }
-  explicit VotincevDRadixMergeSortALL(const InType &in);
+
+  // clang-tidy: modernize-pass-by-value
+  explicit VotincevDRadixMergeSortALL(InType in);
 
  private:
   bool ValidationImpl() override;
@@ -25,6 +28,7 @@ class VotincevDRadixMergeSortALL : public BaseTask {
   // мои дополнительные функции ===
   static void LocalRadixSort(uint32_t *begin, uint32_t *end);
   static void Merge(const uint32_t *src, uint32_t *dst, int32_t left, int32_t mid, int32_t right);
+  static void OmpLocalSortAndMerge(std::vector<uint32_t> &local_data);
 
   std::vector<int32_t> input_;
   std::vector<int32_t> output_;
