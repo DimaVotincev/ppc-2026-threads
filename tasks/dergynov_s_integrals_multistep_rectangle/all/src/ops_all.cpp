@@ -18,29 +18,26 @@
 namespace dergynov_s_integrals_multistep_rectangle {
 namespace {
 
-bool ValidateBorders(const std::vector<std::pair<double, double>>& borders) {
-  return std::ranges::all_of(borders, [](const auto& border) {
+bool ValidateBorders(const std::vector<std::pair<double, double>> &borders) {
+  return std::ranges::all_of(borders, [](const auto &border) {
     return std::isfinite(border.first) && std::isfinite(border.second) && border.first < border.second;
   });
 }
 
 void ComputePoint(size_t linear_idx, int steps_count, int dimensions,
-                  const std::vector<std::pair<double, double>>& limits,
-                  const std::vector<double>& step_sizes,
-                  std::vector<double>& coordinates) {
+                  const std::vector<std::pair<double, double>> &limits, const std::vector<double> &step_sizes,
+                  std::vector<double> &coordinates) {
   size_t temp = linear_idx;
   for (int dimension = dimensions - 1; dimension >= 0; --dimension) {
     int idx_val = static_cast<int>(temp % static_cast<size_t>(steps_count));
     temp /= static_cast<size_t>(steps_count);
-    coordinates[dimension] = limits[dimension].first + 
-                            ((static_cast<double>(idx_val) + 0.5) * step_sizes[dimension]);
+    coordinates[dimension] = limits[dimension].first + ((static_cast<double>(idx_val) + 0.5) * step_sizes[dimension]);
   }
 }
 
-double ComputeSEQ(const std::function<double(const std::vector<double>&)>& function,
-                  const std::vector<std::pair<double, double>>& limits,
-                  int steps_count, int dimensions,
-                  const std::vector<double>& step_sizes) {
+double ComputeSEQ(const std::function<double(const std::vector<double> &)> &function,
+                  const std::vector<std::pair<double, double>> &limits, int steps_count, int dimensions,
+                  const std::vector<double> &step_sizes) {
   size_t total_points = 1;
   for (int dim_idx = 0; dim_idx < dimensions; ++dim_idx) {
     total_points *= static_cast<size_t>(steps_count);
@@ -55,10 +52,9 @@ double ComputeSEQ(const std::function<double(const std::vector<double>&)>& funct
   return total_sum;
 }
 
-double ComputeOMP(const std::function<double(const std::vector<double>&)>& function,
-                  const std::vector<std::pair<double, double>>& limits,
-                  int steps_count, int dimensions,
-                  const std::vector<double>& step_sizes) {
+double ComputeOMP(const std::function<double(const std::vector<double> &)> &function,
+                  const std::vector<std::pair<double, double>> &limits, int steps_count, int dimensions,
+                  const std::vector<double> &step_sizes) {
   size_t total_points = 1;
   for (int dim_idx = 0; dim_idx < dimensions; ++dim_idx) {
     total_points *= static_cast<size_t>(steps_count);
@@ -67,7 +63,8 @@ double ComputeOMP(const std::function<double(const std::vector<double>&)>& funct
   std::vector<double> thread_sums(omp_get_max_threads(), 0.0);
   int error_flag_value = 0;
 
-#pragma omp parallel default(none) shared(function, limits, step_sizes, steps_count, dimensions, total_points, thread_sums, error_flag_value)
+#pragma omp parallel default(none) \
+    shared(function, limits, step_sizes, steps_count, dimensions, total_points, thread_sums, error_flag_value)
   {
     int thread_id = omp_get_thread_num();
     double local_sum = 0.0;
@@ -104,37 +101,30 @@ double ComputeOMP(const std::function<double(const std::vector<double>&)>& funct
   return total_sum;
 }
 
-double ComputeTBB(const std::function<double(const std::vector<double>&)>& function,
-                  const std::vector<std::pair<double, double>>& limits,
-                  int steps_count, int dimensions,
-                  const std::vector<double>& step_sizes) {
+double ComputeTBB(const std::function<double(const std::vector<double> &)> &function,
+                  const std::vector<std::pair<double, double>> &limits, int steps_count, int dimensions,
+                  const std::vector<double> &step_sizes) {
   size_t total_points = 1;
   for (int dim_idx = 0; dim_idx < dimensions; ++dim_idx) {
     total_points *= static_cast<size_t>(steps_count);
   }
 
-  double total_sum = tbb::parallel_reduce(
-      tbb::blocked_range<size_t>(0, total_points), 0.0,
-      [&](const tbb::blocked_range<size_t>& range, double local_sum) {
-        for (size_t linear_index = range.begin(); linear_index != range.end(); ++linear_index) {
-          std::vector<double> point(dimensions);
-          ComputePoint(linear_index, steps_count, dimensions, limits, step_sizes, point);
-          local_sum += function(point);
-        }
-        return local_sum;
-      },
-      [](double first, double second) { return first + second; });
+  double total_sum = tbb::parallel_reduce(tbb::blocked_range<size_t>(0, total_points), 0.0,
+                                          [&](const tbb::blocked_range<size_t> &range, double local_sum) {
+    for (size_t linear_index = range.begin(); linear_index != range.end(); ++linear_index) {
+      std::vector<double> point(dimensions);
+      ComputePoint(linear_index, steps_count, dimensions, limits, step_sizes, point);
+      local_sum += function(point);
+    }
+    return local_sum;
+  }, [](double first, double second) { return first + second; });
 
   return total_sum;
 }
 
-void ProcessRangeSTL(size_t start, size_t end,
-                      const std::function<double(const std::vector<double>&)>& function,
-                      const std::vector<std::pair<double, double>>& limits,
-                      int steps_count, int dimensions,
-                      const std::vector<double>& step_sizes,
-                      std::atomic<bool>& error_occurred,
-                      double& result) {
+void ProcessRangeSTL(size_t start, size_t end, const std::function<double(const std::vector<double> &)> &function,
+                     const std::vector<std::pair<double, double>> &limits, int steps_count, int dimensions,
+                     const std::vector<double> &step_sizes, std::atomic<bool> &error_occurred, double &result) {
   double local_sum = 0.0;
   for (size_t linear_index = start; linear_index < end && !error_occurred.load(); ++linear_index) {
     std::vector<double> point(dimensions);
@@ -149,10 +139,9 @@ void ProcessRangeSTL(size_t start, size_t end,
   result = local_sum;
 }
 
-double ComputeSTL(const std::function<double(const std::vector<double>&)>& function,
-                  const std::vector<std::pair<double, double>>& limits,
-                  int steps_count, int dimensions,
-                  const std::vector<double>& step_sizes) {
+double ComputeSTL(const std::function<double(const std::vector<double> &)> &function,
+                  const std::vector<std::pair<double, double>> &limits, int steps_count, int dimensions,
+                  const std::vector<double> &step_sizes) {
   size_t total_points = 1;
   for (int dim_idx = 0; dim_idx < dimensions; ++dim_idx) {
     total_points *= static_cast<size_t>(steps_count);
@@ -179,14 +168,13 @@ double ComputeSTL(const std::function<double(const std::vector<double>&)>& funct
 
   for (unsigned int thread_index = 0; thread_index < thread_count; ++thread_index) {
     size_t current_end = current_start + chunk_size + (thread_index < remainder ? 1 : 0);
-    worker_threads.emplace_back(ProcessRangeSTL, current_start, current_end,
-                                std::cref(function), std::cref(limits),
-                                steps_count, dimensions, std::cref(step_sizes),
-                                std::ref(error_occurred), std::ref(partial_results[thread_index]));
+    worker_threads.emplace_back(ProcessRangeSTL, current_start, current_end, std::cref(function), std::cref(limits),
+                                steps_count, dimensions, std::cref(step_sizes), std::ref(error_occurred),
+                                std::ref(partial_results[thread_index]));
     current_start = current_end;
   }
 
-  for (auto& worker : worker_threads) {
+  for (auto &worker : worker_threads) {
     worker.join();
   }
 
@@ -201,9 +189,8 @@ double ComputeSTL(const std::function<double(const std::vector<double>&)>& funct
   return total_sum;
 }
 
-double ComputeALL(const std::function<double(const std::vector<double>&)>& function,
-                  const std::vector<std::pair<double, double>>& limits,
-                  int steps_count, int dimensions) {
+double ComputeALL(const std::function<double(const std::vector<double> &)> &function,
+                  const std::vector<std::pair<double, double>> &limits, int steps_count, int dimensions) {
   std::vector<double> step_sizes(dimensions);
   double cell_volume = 1.0;
 
@@ -239,14 +226,14 @@ double ComputeALL(const std::function<double(const std::vector<double>&)>& funct
 
 }  // namespace
 
-DergynovSIntegralsMultistepRectangleALL::DergynovSIntegralsMultistepRectangleALL(const InType& input_params) {
+DergynovSIntegralsMultistepRectangleALL::DergynovSIntegralsMultistepRectangleALL(const InType &input_params) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = input_params;
   GetOutput() = 0.0;
 }
 
 bool DergynovSIntegralsMultistepRectangleALL::ValidationImpl() {
-  const auto& [target_function, integration_limits, step_count] = GetInput();
+  const auto &[target_function, integration_limits, step_count] = GetInput();
 
   if (!target_function) {
     return false;
@@ -267,9 +254,9 @@ bool DergynovSIntegralsMultistepRectangleALL::PreProcessingImpl() {
 }
 
 bool DergynovSIntegralsMultistepRectangleALL::RunImpl() {
-  const auto& input_data = GetInput();
-  const auto& target_function = std::get<0>(input_data);
-  const auto& integration_limits = std::get<1>(input_data);
+  const auto &input_data = GetInput();
+  const auto &target_function = std::get<0>(input_data);
+  const auto &integration_limits = std::get<1>(input_data);
   const int step_count = std::get<2>(input_data);
   const int total_dimensions = static_cast<int>(integration_limits.size());
 
