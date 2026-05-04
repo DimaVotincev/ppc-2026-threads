@@ -109,17 +109,46 @@ python scripts/run_tests.py --running-type="performance"
 ## Приложение
 
 ```cpp
-// Фрагмент гибридной реализации
-int32_t min_val = ScatterData(rank, n, size, input_, local_data);
+bool VotincevDRadixMergeSortALL::RunImpl() {
+  int32_t rank = 0;
+  int32_t size = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-// Внутри каждого процесса работаем параллельно через OpenMP
-#pragma omp parallel
-{
-    // Локальная поразрядная сортировка части данных
-    LocalRadixSort(local_data.data(), local_data.data() + local_n);
+  int32_t n = (rank == 0) ? static_cast<int32_t>(input_.size()) : 0;
+  MPI_Bcast(&n, 1, MPI_INT32_T, 0, MPI_COMM_WORLD);
+
+  std::vector<int32_t> send_counts(static_cast<size_t>(size));
+  std::vector<int32_t> displacements(static_cast<size_t>(size));
+  int32_t items = n / size;
+  int32_t rem = n % size;
+
+  for (int32_t i = 0; i < size; ++i) {
+    send_counts.at(static_cast<size_t>(i)) = items + (i < rem ? 1 : 0);
+    displacements.at(static_cast<size_t>(i)) =
+        (i == 0) ? 0 : displacements.at(static_cast<size_t>(i - 1)) + send_counts.at(static_cast<size_t>(i - 1));
+  }
+
+  auto local_n = send_counts.at(static_cast<size_t>(rank));
+  std::vector<uint32_t> local_data(static_cast<size_t>(local_n));
+
+  int32_t min_val = ScatterData(rank, n, local_n, send_counts, displacements, local_data);
+
+  OmpLocalSortAndMerge(local_data);
+
+  std::vector<uint32_t> gathered_data;
+  if (rank == 0) {
+    gathered_data.resize(static_cast<size_t>(n));
+  }
+
+  MPI_Gatherv(local_data.data(), local_n, MPI_UINT32_T, gathered_data.data(), send_counts.data(), displacements.data(),
+              MPI_UINT32_T, 0, MPI_COMM_WORLD);
+
+  FinalMergeAndFormat(rank, size, n, min_val, gathered_data, displacements);
+
+  if (rank == 0) {
+    GetOutput() = std::move(output_);
+  }
+
+  return true;
 }
-
-// Сбор результатов
-MPI_Gatherv(local_data.data(), local_n, MPI_UINT32_T, 
-            gathered_data.data(), send_counts.data(), displacements.data(), 
-            MPI_UINT32_T, 0, MPI_COMM_WORLD);
