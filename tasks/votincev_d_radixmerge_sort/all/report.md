@@ -71,7 +71,7 @@
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
 2) Func тесты
-python scripts/run_tests.py --running-type=threads --counts 4
+python scripts/run_tests.py --running-type=processes --counts 1 2 3 4
 3) Perf тесты
 $env:PPC_NUM_THREADS = "4"
 $env:PPC_NUM_PROC = "2"
