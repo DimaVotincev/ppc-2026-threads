@@ -44,6 +44,20 @@
 
 ## 7. Результаты
 
+### 7.0 Репродуцируемость
+
+Для запуска используются команды:
+
+1) Конфигурация и билд
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+2) Func тесты
+python scripts/run_tests.py --running-type=threads --counts 4
+3) Perf тесты
+$env:PPC_NUM_THREADS = "4"
+$env:PPC_NUM_PROC = "2"
+python scripts/run_tests.py --running-type="performance"
+
 ### 7.1 Корректность
 Корректность параллельной версии подтверждена набором тестов Google Test. Проверялись массивы с отрицательными числами, дубликатами и уже отсортированные данные. Во всех случаях результат совпал с эталонным (`std::sort`).
 
