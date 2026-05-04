@@ -111,7 +111,6 @@ OpenMP и TBB. Снижение эффективности при масштаб
 ## Приложение
 
 ```cpp
-// Координация асинхронных задач на STL
 for (int32_t width = block_size; width < n; width *= 2) {
     std::vector<std::future<void>> futures;
     for (int32_t i = 0; i < n; i += 2 * width) {
