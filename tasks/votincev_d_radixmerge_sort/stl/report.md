@@ -112,24 +112,30 @@ OpenMP и TBB. Снижение эффективности при масштаб
 ## Приложение
 
 ```cpp
-for (int32_t width = block_size; width < n; width *= 2) {
-    std::vector<std::future<void>> futures;
-    for (int32_t i = 0; i < n; i += 2 * width) {
-        int32_t left = i;
-        int32_t mid = std::min(i + width, n);
-        int32_t right = std::min(i + 2 * width, n);
+bool VotincevDRadixMergeSortSTL::RunImpl() {
+  const auto &input = GetInput();
+  auto n = static_cast<int32_t>(input.size());
+  if (n == 0) {
+    return true;
+  }
 
-        if (mid < right) {
-            futures.push_back(std::async(std::launch::async, [src, dst, left, mid, right] {
-                VotincevDRadixMergeSortSTL::Merge(src, dst, left, mid, right);
-            }));
-        } else if (left < n) {
-            std::copy(src + left, src + mid, dst + left);
-        }
-    }
-    for (auto &f : futures) {
-        f.get();
-    }
-    futures.clear();
-    std::swap(src, dst);
+  int32_t min_val = *std::ranges::min_element(input.begin(), input.end());
+
+  std::vector<uint32_t> working_array(static_cast<size_t>(n));
+  for (int32_t i = 0; i < n; ++i) {
+    working_array[static_cast<size_t>(i)] =
+        static_cast<uint32_t>(input[static_cast<size_t>(i)]) - static_cast<uint32_t>(min_val);
+  }
+
+  std::vector<uint32_t> temp_buffer(static_cast<size_t>(n));
+  ParallelRadixMergeSort(working_array.data(), n, temp_buffer.data());
+
+  std::vector<int32_t> result(static_cast<size_t>(n));
+  for (int32_t i = 0; i < n; ++i) {
+    result[static_cast<size_t>(i)] =
+        static_cast<int32_t>(working_array[static_cast<size_t>(i)] + static_cast<uint32_t>(min_val));
+  }
+
+  GetOutput() = std::move(result);
+  return true;
 }
